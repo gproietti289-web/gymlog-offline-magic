@@ -6,6 +6,7 @@ import { Dumbbell, Plus, Clock } from "lucide-react";
 import { getTemplates, type WorkoutTemplate } from "@/lib/storage";
 import { formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
+import { BottomNav } from "@/components/BottomNav";
 
 const Index = () => {
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
@@ -20,7 +21,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="sticky top-0 z-10 backdrop-blur-lg bg-background/80 border-b border-border">
         <div className="container max-w-2xl mx-auto px-4 py-4">
@@ -29,7 +30,7 @@ const Index = () => {
               <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
                 <Dumbbell className="h-5 w-5 text-primary-foreground" />
               </div>
-              <h1 className="text-2xl font-semibold text-foreground">Workout Tracker</h1>
+              <h1 className="text-2xl font-semibold text-foreground">Template</h1>
             </div>
             <Button variant="ghost" size="icon" className="rounded-full">
               <Plus className="h-5 w-5" />
@@ -89,6 +90,8 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      <BottomNav />
     </div>
   );
 };

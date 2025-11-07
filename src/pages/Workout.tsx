@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Check } from "lucide-react";
 import { getTemplate, updateTemplate, type WorkoutTemplate, type Exercise } from "@/lib/storage";
+import { saveCompletedWorkout } from "@/lib/workoutHistory";
 import { toast } from "sonner";
 
 const Workout = () => {
@@ -37,10 +38,26 @@ const Workout = () => {
     if (template) {
       const updatedTemplate = { ...template, exercises };
       updateTemplate(updatedTemplate);
+      
+      const totalSets = exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
+      const completedSets = exercises.reduce((acc, ex) => acc + ex.sets.filter((s) => s.completed).length, 0);
+      
+      saveCompletedWorkout({
+        templateId: template.id,
+        templateName: template.name,
+        completedAt: new Date().toISOString(),
+        totalSets,
+        completedSets,
+        exercises: exercises.map(ex => ({
+          name: ex.name,
+          sets: ex.sets,
+        })),
+      });
+      
       toast.success("Workout completato!", {
         description: "I tuoi progressi sono stati salvati.",
       });
-      navigate("/");
+      navigate("/dashboard");
     }
   };
 
