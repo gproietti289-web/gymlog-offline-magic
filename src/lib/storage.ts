@@ -54,6 +54,25 @@ export const updateTemplate = (template: WorkoutTemplate) => {
   }
 };
 
+export const createTemplate = (name: string, exercises: { name: string; sets: number }[]): WorkoutTemplate => {
+  const templates = getTemplates();
+  const newId = (Math.max(0, ...templates.map(t => parseInt(t.id))) + 1).toString();
+  
+  const newTemplate: WorkoutTemplate = {
+    id: newId,
+    name,
+    exercises: exercises.map((ex, index) => ({
+      id: `${newId}-${index + 1}`,
+      name: ex.name,
+      sets: Array(ex.sets).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+    })),
+  };
+  
+  templates.push(newTemplate);
+  saveTemplates(templates);
+  return newTemplate;
+};
+
 const getDefaultTemplates = (): WorkoutTemplate[] => [
   {
     id: "1",

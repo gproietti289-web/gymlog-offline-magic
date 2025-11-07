@@ -2,15 +2,30 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, Plus, Clock } from "lucide-react";
-import { getTemplates, type WorkoutTemplate } from "@/lib/storage";
+import { Dumbbell, Plus, Clock, X } from "lucide-react";
+import { getTemplates, createTemplate, type WorkoutTemplate } from "@/lib/storage";
 import { formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
 import { BottomNav } from "@/components/BottomNav";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [exercises, setExercises] = useState<{ name: string; sets: number }[]>([
+    { name: "", sets: 3 },
+  ]);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     setTemplates(getTemplates());
@@ -18,6 +33,51 @@ const Index = () => {
 
   const startWorkout = (templateId: string) => {
     navigate(`/workout/${templateId}`);
+  };
+
+  const handleAddExercise = () => {
+    setExercises([...exercises, { name: "", sets: 3 }]);
+  };
+
+  const handleRemoveExercise = (index: number) => {
+    setExercises(exercises.filter((_, i) => i !== index));
+  };
+
+  const handleExerciseChange = (index: number, field: "name" | "sets", value: string | number) => {
+    const newExercises = [...exercises];
+    newExercises[index] = { ...newExercises[index], [field]: value };
+    setExercises(newExercises);
+  };
+
+  const handleCreateTemplate = () => {
+    if (!templateName.trim()) {
+      toast({
+        title: "Errore",
+        description: "Inserisci un nome per la scheda",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const validExercises = exercises.filter((ex) => ex.name.trim() !== "");
+    if (validExercises.length === 0) {
+      toast({
+        title: "Errore",
+        description: "Aggiungi almeno un esercizio",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createTemplate(templateName, validExercises);
+    setTemplates(getTemplates());
+    setIsDialogOpen(false);
+    setTemplateName("");
+    setExercises([{ name: "", sets: 3 }]);
+    toast({
+      title: "Successo",
+      description: "Scheda creata con successo",
+    });
   };
 
   return (
@@ -32,7 +92,12 @@ const Index = () => {
               </div>
               <h1 className="text-2xl font-semibold text-foreground">Template</h1>
             </div>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => setIsDialogOpen(true)}
+            >
               <Plus className="h-5 w-5" />
             </Button>
           </div>
@@ -92,6 +157,105 @@ const Index = () => {
       </main>
 
       <BottomNav />
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Crea Nuova Scheda</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="template-name">Nome Scheda</Label>
+              <Input
+                id="template-name"
+                placeholder="es. Upper Body"
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Esercizi</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddExercise}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Aggiungi
+                </Button>
+              </div>
+
+              {exercises.map((exercise, index) => (
+                <Card key={index} className="p-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm">Esercizio {index + 1}</Label>
+                      {exercises.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => handleRemoveExercise(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <Input
+                      placeholder="Nome esercizio"
+                      value={exercise.name}
+                      onChange={(e) =>
+                        handleExerciseChange(index, "name", e.target.value)
+                      }
+                    />
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`sets-${index}`} className="text-sm min-w-fit">
+                        Serie:
+                      </Label>
+                      <Input
+                        id={`sets-${index}`}
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={exercise.sets}
+                        onChange={(e) =>
+                          handleExerciseChange(
+                            index,
+                            "sets",
+                            parseInt(e.target.value) || 1
+                          )
+                        }
+                        className="w-20"
+                      />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setTemplateName("");
+                  setExercises([{ name: "", sets: 3 }]);
+                }}
+                className="flex-1"
+              >
+                Annulla
+              </Button>
+              <Button onClick={handleCreateTemplate} className="flex-1">
+                Crea Scheda
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
