@@ -76,6 +76,12 @@ export const createTemplate = (name: string, exercises: { name: string; sets: nu
   return newTemplate;
 };
 
+export const deleteTemplate = (id: string) => {
+  const templates = getTemplates();
+  const filtered = templates.filter((t) => t.id !== id);
+  saveTemplates(filtered);
+};
+
 const getDefaultTemplates = (): WorkoutTemplate[] => [
   {
     id: "1",
