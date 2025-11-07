@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Check, Flame, Dumbbell, TrendingDown, Repeat } from "lucide-react";
 import { getTemplate, updateTemplate, type WorkoutTemplate, type Exercise, type SetType } from "@/lib/storage";
-import { saveCompletedWorkout } from "@/lib/workoutHistory";
+import { saveCompletedWorkout, getWorkoutHistory } from "@/lib/workoutHistory";
 import { toast } from "sonner";
 import {
   Popover,
@@ -26,7 +26,34 @@ const Workout = () => {
       const loadedTemplate = getTemplate(id);
       if (loadedTemplate) {
         setTemplate(loadedTemplate);
-        setExercises(JSON.parse(JSON.stringify(loadedTemplate.exercises)));
+        
+        // Pre-compila con i valori dell'ultimo workout
+        const history = getWorkoutHistory();
+        const lastWorkout = history.find(w => w.templateId === id);
+        
+        const exercisesWithHistory = loadedTemplate.exercises.map(exercise => {
+          const lastExercise = lastWorkout?.exercises.find(e => e.name === exercise.name);
+          
+          if (lastExercise) {
+            return {
+              ...exercise,
+              sets: exercise.sets.map((set, index) => {
+                const lastSet = lastExercise.sets[index];
+                return lastSet ? {
+                  ...set,
+                  weight: lastSet.weight,
+                  reps: lastSet.reps,
+                  rir: lastSet.rir,
+                  completed: false, // Reset completed status
+                } : set;
+              }),
+            };
+          }
+          
+          return exercise;
+        });
+        
+        setExercises(JSON.parse(JSON.stringify(exercisesWithHistory)));
       }
     }
   }, [id]);

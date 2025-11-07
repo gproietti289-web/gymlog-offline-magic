@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, Plus, Clock, X } from "lucide-react";
+import { Dumbbell, Plus, Clock, X, Play, Pencil } from "lucide-react";
 import { getTemplates, createTemplate, type WorkoutTemplate } from "@/lib/storage";
 import { formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 const Index = () => {
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<WorkoutTemplate | null>(null);
   const [templateName, setTemplateName] = useState("");
   const [exercises, setExercises] = useState<{ name: string; sets: number }[]>([
     { name: "", sets: 3 },
@@ -49,7 +50,14 @@ const Index = () => {
     setExercises(newExercises);
   };
 
-  const handleCreateTemplate = () => {
+  const handleEditTemplate = (template: WorkoutTemplate) => {
+    setEditingTemplate(template);
+    setTemplateName(template.name);
+    setExercises(template.exercises.map(ex => ({ name: ex.name, sets: ex.sets.length })));
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveTemplate = () => {
     if (!templateName.trim()) {
       toast({
         title: "Errore",
@@ -69,15 +77,56 @@ const Index = () => {
       return;
     }
 
-    createTemplate(templateName, validExercises);
-    setTemplates(getTemplates());
+    if (editingTemplate) {
+      // Update existing template
+      const updatedTemplate: WorkoutTemplate = {
+        ...editingTemplate,
+        name: templateName,
+        exercises: validExercises.map((ex, exIndex) => {
+          const existingExercise = editingTemplate.exercises[exIndex];
+          return {
+            id: existingExercise?.id || Date.now().toString() + exIndex,
+            name: ex.name,
+            sets: Array.from({ length: ex.sets }, (_, i) => 
+              existingExercise?.sets[i] || {
+                weight: 0,
+                reps: 0,
+                rir: 0,
+                completed: false,
+                type: "working" as const,
+              }
+            ),
+          };
+        }),
+      };
+      
+      const allTemplates = getTemplates();
+      const updatedTemplates = allTemplates.map(t => 
+        t.id === editingTemplate.id ? updatedTemplate : t
+      );
+      localStorage.setItem("workout-templates", JSON.stringify(updatedTemplates));
+      setTemplates(updatedTemplates);
+    } else {
+      // Create new template
+      createTemplate(templateName, validExercises);
+      setTemplates(getTemplates());
+    }
+    
     setIsDialogOpen(false);
+    setEditingTemplate(null);
     setTemplateName("");
     setExercises([{ name: "", sets: 3 }]);
     toast({
       title: "Successo",
-      description: "Scheda creata con successo",
+      description: editingTemplate ? "Scheda aggiornata con successo" : "Scheda creata con successo",
     });
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingTemplate(null);
+    setTemplateName("");
+    setExercises([{ name: "", sets: 3 }]);
   };
 
   return (
@@ -110,8 +159,7 @@ const Index = () => {
           {templates.map((template) => (
             <Card
               key={template.id}
-              className="p-4 transition-all hover:shadow-md active:scale-[0.98] cursor-pointer border-border"
-              onClick={() => startWorkout(template.id)}
+              className="p-4 transition-all border-border"
             >
               <div className="flex items-center justify-between">
                 <div className="space-y-1 flex-1">
@@ -131,15 +179,27 @@ const Index = () => {
                     </div>
                   )}
                 </div>
-                <div className="ml-4">
+                <div className="flex items-center gap-2">
                   <Button
-                    size="sm"
-                    className="rounded-full shadow-sm"
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full h-10 w-10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditTemplate(template);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="default"
+                    className="rounded-full shadow-sm gap-2 px-6"
                     onClick={(e) => {
                       e.stopPropagation();
                       startWorkout(template.id);
                     }}
                   >
+                    <Play className="h-4 w-4" />
                     Start
                   </Button>
                 </div>
@@ -158,10 +218,10 @@ const Index = () => {
 
       <BottomNav />
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Crea Nuova Scheda</DialogTitle>
+            <DialogTitle>{editingTemplate ? "Modifica Scheda" : "Crea Nuova Scheda"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -240,17 +300,13 @@ const Index = () => {
             <div className="flex gap-2 pt-4">
               <Button
                 variant="outline"
-                onClick={() => {
-                  setIsDialogOpen(false);
-                  setTemplateName("");
-                  setExercises([{ name: "", sets: 3 }]);
-                }}
+                onClick={handleCloseDialog}
                 className="flex-1"
               >
                 Annulla
               </Button>
-              <Button onClick={handleCreateTemplate} className="flex-1">
-                Crea Scheda
+              <Button onClick={handleSaveTemplate} className="flex-1">
+                {editingTemplate ? "Salva Modifiche" : "Crea Scheda"}
               </Button>
             </div>
           </div>
