@@ -14,6 +14,7 @@ export interface CompletedWorkout {
       reps: number;
       rir: number;
       completed: boolean;
+      type: "warm-up" | "working" | "drop" | "rest-pause";
     }[];
   }[];
 }

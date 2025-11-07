@@ -1,10 +1,13 @@
 // Local storage utilities for offline-first workout tracking
 
+export type SetType = "warm-up" | "working" | "drop" | "rest-pause";
+
 export interface WorkoutSet {
   weight: number;
   reps: number;
   rir: number;
   completed: boolean;
+  type: SetType;
 }
 
 export interface Exercise {
@@ -64,7 +67,7 @@ export const createTemplate = (name: string, exercises: { name: string; sets: nu
     exercises: exercises.map((ex, index) => ({
       id: `${newId}-${index + 1}`,
       name: ex.name,
-      sets: Array(ex.sets).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+      sets: Array(ex.sets).fill({ weight: 0, reps: 0, rir: 0, completed: false, type: "working" }),
     })),
   };
   
@@ -81,17 +84,17 @@ const getDefaultTemplates = (): WorkoutTemplate[] => [
       {
         id: "1-1",
         name: "Bench Press",
-        sets: Array(4).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+      sets: Array(4).fill({ weight: 0, reps: 0, rir: 0, completed: false, type: "working" }),
       },
       {
         id: "1-2",
         name: "Shoulder Press",
-        sets: Array(3).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+      sets: Array(3).fill({ weight: 0, reps: 0, rir: 0, completed: false, type: "working" }),
       },
       {
         id: "1-3",
         name: "Tricep Dips",
-        sets: Array(3).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+      sets: Array(3).fill({ weight: 0, reps: 0, rir: 0, completed: false, type: "working" }),
       },
     ],
   },
@@ -102,17 +105,17 @@ const getDefaultTemplates = (): WorkoutTemplate[] => [
       {
         id: "2-1",
         name: "Pull Ups",
-        sets: Array(4).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+      sets: Array(4).fill({ weight: 0, reps: 0, rir: 0, completed: false, type: "working" }),
       },
       {
         id: "2-2",
         name: "Barbell Row",
-        sets: Array(4).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+      sets: Array(4).fill({ weight: 0, reps: 0, rir: 0, completed: false, type: "working" }),
       },
       {
         id: "2-3",
         name: "Bicep Curls",
-        sets: Array(3).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+      sets: Array(3).fill({ weight: 0, reps: 0, rir: 0, completed: false, type: "working" }),
       },
     ],
   },
@@ -123,17 +126,17 @@ const getDefaultTemplates = (): WorkoutTemplate[] => [
       {
         id: "3-1",
         name: "Squat",
-        sets: Array(4).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+        sets: Array(4).fill({ weight: 0, reps: 0, rir: 0, completed: false, type: "working" }),
       },
       {
         id: "3-2",
         name: "Romanian Deadlift",
-        sets: Array(3).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+      sets: Array(3).fill({ weight: 0, reps: 0, rir: 0, completed: false, type: "working" }),
       },
       {
         id: "3-3",
         name: "Leg Press",
-        sets: Array(3).fill({ weight: 0, reps: 0, rir: 0, completed: false }),
+        sets: Array(3).fill({ weight: 0, reps: 0, rir: 0, completed: false, type: "working" }),
       },
     ],
   },

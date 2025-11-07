@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Check } from "lucide-react";
-import { getTemplate, updateTemplate, type WorkoutTemplate, type Exercise } from "@/lib/storage";
+import { ArrowLeft, Check, Flame, Dumbbell, TrendingDown, Repeat } from "lucide-react";
+import { getTemplate, updateTemplate, type WorkoutTemplate, type Exercise, type SetType } from "@/lib/storage";
 import { saveCompletedWorkout } from "@/lib/workoutHistory";
 import { toast } from "sonner";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const Workout = () => {
   const { id } = useParams();
@@ -25,13 +26,39 @@ const Workout = () => {
     }
   }, [id]);
 
-  const updateSet = (exerciseIndex: number, setIndex: number, field: keyof typeof exercises[0]["sets"][0], value: number | boolean) => {
+  const updateSet = (exerciseIndex: number, setIndex: number, field: keyof typeof exercises[0]["sets"][0], value: number | boolean | SetType) => {
     const newExercises = [...exercises];
     newExercises[exerciseIndex].sets[setIndex] = {
       ...newExercises[exerciseIndex].sets[setIndex],
       [field]: value,
     };
     setExercises(newExercises);
+  };
+
+  const getSetTypeIcon = (type: SetType) => {
+    switch (type) {
+      case "warm-up":
+        return <Flame className="h-4 w-4" />;
+      case "working":
+        return <Dumbbell className="h-4 w-4" />;
+      case "drop":
+        return <TrendingDown className="h-4 w-4" />;
+      case "rest-pause":
+        return <Repeat className="h-4 w-4" />;
+    }
+  };
+
+  const getSetTypeColor = (type: SetType) => {
+    switch (type) {
+      case "warm-up":
+        return "text-orange-500";
+      case "working":
+        return "text-primary";
+      case "drop":
+        return "text-purple-500";
+      case "rest-pause":
+        return "text-blue-500";
+    }
   };
 
   const completeWorkout = () => {
@@ -108,13 +135,21 @@ const Workout = () => {
             <div className="space-y-3">
               {exercise.sets.map((set, setIndex) => (
                 <div key={setIndex} className="flex items-center gap-2">
-                  <Checkbox
-                    checked={set.completed}
-                    onCheckedChange={(checked) =>
-                      updateSet(exerciseIndex, setIndex, "completed", checked === true)
-                    }
-                    className="h-6 w-6 rounded-full"
-                  />
+                  <ToggleGroup
+                    type="single"
+                    value={set.type}
+                    onValueChange={(value) => {
+                      if (value) updateSet(exerciseIndex, setIndex, "type", value as SetType);
+                    }}
+                  >
+                    <ToggleGroupItem 
+                      value={set.type} 
+                      className={`h-10 w-10 rounded-full p-0 ${getSetTypeColor(set.type)}`}
+                      aria-label={set.type}
+                    >
+                      {getSetTypeIcon(set.type)}
+                    </ToggleGroupItem>
+                  </ToggleGroup>
 
                   <span className="text-sm font-medium text-muted-foreground w-8">
                     {setIndex + 1}
@@ -160,6 +195,14 @@ const Workout = () => {
                       />
                     </div>
                   </div>
+
+                  <Checkbox
+                    checked={set.completed}
+                    onCheckedChange={(checked) =>
+                      updateSet(exerciseIndex, setIndex, "completed", checked === true)
+                    }
+                    className="h-6 w-6 rounded-full"
+                  />
                 </div>
               ))}
             </div>

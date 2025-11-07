@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Activity, Dumbbell, TrendingUp, Calendar } from "lucide-react";
 import { getTotalStats, getWorkoutHistory, type CompletedWorkout } from "@/lib/workoutHistory";
@@ -7,6 +8,7 @@ import { it } from "date-fns/locale";
 import { BottomNav } from "@/components/BottomNav";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ totalWorkouts: 0, totalSets: 0, totalVolume: 0 });
   const [recentWorkouts, setRecentWorkouts] = useState<CompletedWorkout[]>([]);
 
@@ -67,7 +69,11 @@ const Dashboard = () => {
           <div className="space-y-3">
             <h2 className="text-lg font-semibold text-foreground px-1">Workout recenti</h2>
             {recentWorkouts.map((workout) => (
-              <Card key={workout.id} className="p-4">
+              <Card 
+                key={workout.id} 
+                className="p-4 cursor-pointer hover:bg-accent transition-colors"
+                onClick={() => navigate(`/workout-history/${workout.id}`)}
+              >
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <h3 className="font-semibold text-foreground">{workout.templateName}</h3>
