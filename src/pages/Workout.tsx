@@ -8,7 +8,11 @@ import { ArrowLeft, Check, Flame, Dumbbell, TrendingDown, Repeat } from "lucide-
 import { getTemplate, updateTemplate, type WorkoutTemplate, type Exercise, type SetType } from "@/lib/storage";
 import { saveCompletedWorkout } from "@/lib/workoutHistory";
 import { toast } from "sonner";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Workout = () => {
   const { id } = useParams();
@@ -135,21 +139,53 @@ const Workout = () => {
             <div className="space-y-3">
               {exercise.sets.map((set, setIndex) => (
                 <div key={setIndex} className="flex items-center gap-2">
-                  <ToggleGroup
-                    type="single"
-                    value={set.type}
-                    onValueChange={(value) => {
-                      if (value) updateSet(exerciseIndex, setIndex, "type", value as SetType);
-                    }}
-                  >
-                    <ToggleGroupItem 
-                      value={set.type} 
-                      className={`h-10 w-10 rounded-full p-0 ${getSetTypeColor(set.type)}`}
-                      aria-label={set.type}
-                    >
-                      {getSetTypeIcon(set.type)}
-                    </ToggleGroupItem>
-                  </ToggleGroup>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-10 w-10 rounded-full ${getSetTypeColor(set.type)}`}
+                      >
+                        {getSetTypeIcon(set.type)}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2" align="start">
+                      <div className="space-y-1">
+                        <Button
+                          variant={set.type === "warm-up" ? "secondary" : "ghost"}
+                          className="w-full justify-start text-orange-500 hover:text-orange-600 hover:bg-orange-500/10"
+                          onClick={() => updateSet(exerciseIndex, setIndex, "type", "warm-up")}
+                        >
+                          <Flame className="h-4 w-4 mr-2" />
+                          Warm Up
+                        </Button>
+                        <Button
+                          variant={set.type === "working" ? "secondary" : "ghost"}
+                          className="w-full justify-start text-primary hover:bg-primary/10"
+                          onClick={() => updateSet(exerciseIndex, setIndex, "type", "working")}
+                        >
+                          <Dumbbell className="h-4 w-4 mr-2" />
+                          Working Set
+                        </Button>
+                        <Button
+                          variant={set.type === "drop" ? "secondary" : "ghost"}
+                          className="w-full justify-start text-purple-500 hover:text-purple-600 hover:bg-purple-500/10"
+                          onClick={() => updateSet(exerciseIndex, setIndex, "type", "drop")}
+                        >
+                          <TrendingDown className="h-4 w-4 mr-2" />
+                          Drop Set
+                        </Button>
+                        <Button
+                          variant={set.type === "rest-pause" ? "secondary" : "ghost"}
+                          className="w-full justify-start text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
+                          onClick={() => updateSet(exerciseIndex, setIndex, "type", "rest-pause")}
+                        >
+                          <Repeat className="h-4 w-4 mr-2" />
+                          Rest Pause
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
 
                   <span className="text-sm font-medium text-muted-foreground w-8">
                     {setIndex + 1}
