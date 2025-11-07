@@ -65,6 +65,10 @@ const WorkoutHistory = () => {
     }
   };
 
+  const calculate1RM = (weight: number, reps: number) => {
+    return weight * (1 + (reps / 30));
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -118,40 +122,59 @@ const WorkoutHistory = () => {
             <Card key={exIndex} className="p-4">
               <h3 className="text-lg font-semibold text-foreground mb-4">{exercise.name}</h3>
               
-              <div className="space-y-2">
-                {exercise.sets.map((set, setIndex) => (
-                  <div 
-                    key={setIndex} 
-                    className={`flex items-center justify-between p-3 rounded-lg border ${
-                      set.completed ? "border-primary/20 bg-primary/5" : "border-border bg-muted/30"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-muted-foreground w-6">
-                        {setIndex + 1}
-                      </span>
-                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${getSetTypeColor(set.type)}`}>
-                        {getSetTypeIcon(set.type)}
-                        <span>{getSetTypeLabel(set.type)}</span>
+              <div className="space-y-3">
+                {exercise.sets.map((set, setIndex) => {
+                  const oneRM = set.type === "working" ? calculate1RM(set.weight, set.reps) : null;
+                  
+                  return (
+                    <div 
+                      key={setIndex} 
+                      className={`p-4 rounded-xl border-2 ${
+                        set.completed 
+                          ? "border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10" 
+                          : "border-border bg-muted/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-background border-2 border-border">
+                            <span className="text-sm font-bold text-foreground">
+                              {setIndex + 1}
+                            </span>
+                          </div>
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border-2 ${getSetTypeColor(set.type)}`}>
+                            {getSetTypeIcon(set.type)}
+                            <span>{getSetTypeLabel(set.type)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-6">
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-foreground">{set.weight}</p>
+                            <p className="text-xs font-medium text-muted-foreground">kg</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-foreground">{set.reps}</p>
+                            <p className="text-xs font-medium text-muted-foreground">reps</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-foreground">{set.rir}</p>
+                            <p className="text-xs font-medium text-muted-foreground">RIR</p>
+                          </div>
+                        </div>
+                        
+                        {oneRM && (
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-primary">{oneRM.toFixed(1)}</p>
+                            <p className="text-xs font-medium text-muted-foreground">1RM stimato</p>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-6">
-                      <div className="text-center">
-                        <p className="text-sm font-semibold text-foreground">{set.weight}</p>
-                        <p className="text-xs text-muted-foreground">kg</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-semibold text-foreground">{set.reps}</p>
-                        <p className="text-xs text-muted-foreground">reps</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-semibold text-foreground">{set.rir}</p>
-                        <p className="text-xs text-muted-foreground">RIR</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Card>
           ))}

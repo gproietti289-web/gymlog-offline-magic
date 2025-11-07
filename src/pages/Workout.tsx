@@ -19,6 +19,7 @@ const Workout = () => {
   const navigate = useNavigate();
   const [template, setTemplate] = useState<WorkoutTemplate | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [openPopover, setOpenPopover] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -137,110 +138,125 @@ const Workout = () => {
             <h3 className="text-lg font-semibold text-foreground">{exercise.name}</h3>
 
             <div className="space-y-3">
-              {exercise.sets.map((set, setIndex) => (
-                <div key={setIndex} className="flex items-center gap-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className={`h-10 w-10 rounded-full ${getSetTypeColor(set.type)}`}
-                      >
-                        {getSetTypeIcon(set.type)}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-48 p-2" align="start">
+              {exercise.sets.map((set, setIndex) => {
+                const popoverId = `${exerciseIndex}-${setIndex}`;
+                return (
+                  <div key={setIndex} className="flex items-center gap-2">
+                    <Popover open={openPopover === popoverId} onOpenChange={(open) => setOpenPopover(open ? popoverId : null)}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className={`h-10 w-10 rounded-full border-2 ${getSetTypeColor(set.type)}`}
+                        >
+                          {getSetTypeIcon(set.type)}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 p-2 backdrop-blur-xl bg-background/80 border-2 border-primary/20 shadow-lg" align="start">
+                        <div className="space-y-1">
+                          <Button
+                            variant={set.type === "warm-up" ? "secondary" : "ghost"}
+                            className="w-full justify-start text-orange-500 hover:text-orange-600 hover:bg-orange-500/10"
+                            onClick={() => {
+                              updateSet(exerciseIndex, setIndex, "type", "warm-up");
+                              setOpenPopover(null);
+                            }}
+                          >
+                            <Flame className="h-4 w-4 mr-2" />
+                            Warm Up
+                          </Button>
+                          <Button
+                            variant={set.type === "working" ? "secondary" : "ghost"}
+                            className="w-full justify-start text-primary hover:bg-primary/10"
+                            onClick={() => {
+                              updateSet(exerciseIndex, setIndex, "type", "working");
+                              setOpenPopover(null);
+                            }}
+                          >
+                            <Dumbbell className="h-4 w-4 mr-2" />
+                            Working Set
+                          </Button>
+                          <Button
+                            variant={set.type === "drop" ? "secondary" : "ghost"}
+                            className="w-full justify-start text-purple-500 hover:text-purple-600 hover:bg-purple-500/10"
+                            onClick={() => {
+                              updateSet(exerciseIndex, setIndex, "type", "drop");
+                              setOpenPopover(null);
+                            }}
+                          >
+                            <TrendingDown className="h-4 w-4 mr-2" />
+                            Drop Set
+                          </Button>
+                          <Button
+                            variant={set.type === "rest-pause" ? "secondary" : "ghost"}
+                            className="w-full justify-start text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
+                            onClick={() => {
+                              updateSet(exerciseIndex, setIndex, "type", "rest-pause");
+                              setOpenPopover(null);
+                            }}
+                          >
+                            <Repeat className="h-4 w-4 mr-2" />
+                            Rest Pause
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    <span className="text-sm font-medium text-muted-foreground w-8">
+                      {setIndex + 1}
+                    </span>
+
+                    <div className="flex-1 grid grid-cols-3 gap-2">
                       <div className="space-y-1">
-                        <Button
-                          variant={set.type === "warm-up" ? "secondary" : "ghost"}
-                          className="w-full justify-start text-orange-500 hover:text-orange-600 hover:bg-orange-500/10"
-                          onClick={() => updateSet(exerciseIndex, setIndex, "type", "warm-up")}
-                        >
-                          <Flame className="h-4 w-4 mr-2" />
-                          Warm Up
-                        </Button>
-                        <Button
-                          variant={set.type === "working" ? "secondary" : "ghost"}
-                          className="w-full justify-start text-primary hover:bg-primary/10"
-                          onClick={() => updateSet(exerciseIndex, setIndex, "type", "working")}
-                        >
-                          <Dumbbell className="h-4 w-4 mr-2" />
-                          Working Set
-                        </Button>
-                        <Button
-                          variant={set.type === "drop" ? "secondary" : "ghost"}
-                          className="w-full justify-start text-purple-500 hover:text-purple-600 hover:bg-purple-500/10"
-                          onClick={() => updateSet(exerciseIndex, setIndex, "type", "drop")}
-                        >
-                          <TrendingDown className="h-4 w-4 mr-2" />
-                          Drop Set
-                        </Button>
-                        <Button
-                          variant={set.type === "rest-pause" ? "secondary" : "ghost"}
-                          className="w-full justify-start text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
-                          onClick={() => updateSet(exerciseIndex, setIndex, "type", "rest-pause")}
-                        >
-                          <Repeat className="h-4 w-4 mr-2" />
-                          Rest Pause
-                        </Button>
+                        <label className="text-xs text-muted-foreground">kg</label>
+                        <Input
+                          type="number"
+                          value={set.weight || ""}
+                          onChange={(e) =>
+                            updateSet(exerciseIndex, setIndex, "weight", parseFloat(e.target.value) || 0)
+                          }
+                          className="h-10 text-center"
+                          placeholder="0"
+                        />
                       </div>
-                    </PopoverContent>
-                  </Popover>
 
-                  <span className="text-sm font-medium text-muted-foreground w-8">
-                    {setIndex + 1}
-                  </span>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">reps</label>
+                        <Input
+                          type="number"
+                          value={set.reps || ""}
+                          onChange={(e) =>
+                            updateSet(exerciseIndex, setIndex, "reps", parseInt(e.target.value) || 0)
+                          }
+                          className="h-10 text-center"
+                          placeholder="0"
+                        />
+                      </div>
 
-                  <div className="flex-1 grid grid-cols-3 gap-2">
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">kg</label>
-                      <Input
-                        type="number"
-                        value={set.weight || ""}
-                        onChange={(e) =>
-                          updateSet(exerciseIndex, setIndex, "weight", parseFloat(e.target.value) || 0)
-                        }
-                        className="h-10 text-center"
-                        placeholder="0"
-                      />
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">RIR</label>
+                        <Input
+                          type="number"
+                          value={set.rir || ""}
+                          onChange={(e) =>
+                            updateSet(exerciseIndex, setIndex, "rir", parseInt(e.target.value) || 0)
+                          }
+                          className="h-10 text-center"
+                          placeholder="0"
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">reps</label>
-                      <Input
-                        type="number"
-                        value={set.reps || ""}
-                        onChange={(e) =>
-                          updateSet(exerciseIndex, setIndex, "reps", parseInt(e.target.value) || 0)
-                        }
-                        className="h-10 text-center"
-                        placeholder="0"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">RIR</label>
-                      <Input
-                        type="number"
-                        value={set.rir || ""}
-                        onChange={(e) =>
-                          updateSet(exerciseIndex, setIndex, "rir", parseInt(e.target.value) || 0)
-                        }
-                        className="h-10 text-center"
-                        placeholder="0"
-                      />
-                    </div>
+                    <Checkbox
+                      checked={set.completed}
+                      onCheckedChange={(checked) =>
+                        updateSet(exerciseIndex, setIndex, "completed", checked === true)
+                      }
+                      className="h-6 w-6 rounded-full"
+                    />
                   </div>
-
-                  <Checkbox
-                    checked={set.completed}
-                    onCheckedChange={(checked) =>
-                      updateSet(exerciseIndex, setIndex, "completed", checked === true)
-                    }
-                    className="h-6 w-6 rounded-full"
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
         ))}
